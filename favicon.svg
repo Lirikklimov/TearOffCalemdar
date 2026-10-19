@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bind" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b6f78"/>
+      <stop offset="1" stop-color="#26292f"/>
+    </linearGradient>
+    <linearGradient id="head" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d44848"/>
+      <stop offset="1" stop-color="#b52c2c"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eceff2"/>
+      <stop offset="1" stop-color="#dbe0e6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Тень-подложка -->
+  <rect x="6" y="4" width="52" height="56" rx="6" fill="#000" opacity="0.18"/>
+
+  <!-- Лист -->
+  <rect x="6" y="6" width="52" height="54" rx="6" fill="url(#paper)"/>
+
+  <!-- Пружинный блок -->
+  <path d="M6 14 L6 10 Q6 6 10 6 L54 6 Q58 6 58 10 L58 14 Z" fill="url(#bind)"/>
+
+  <!-- Кольца -->
+  <circle cx="15" cy="10" r="1.6" fill="#e8e8ee"/>
+  <circle cx="24" cy="10" r="1.6" fill="#e8e8ee"/>
+  <circle cx="32" cy="10" r="1.6" fill="#e8e8ee"/>
+  <circle cx="40" cy="10" r="1.6" fill="#e8e8ee"/>
+  <circle cx="49" cy="10" r="1.6" fill="#e8e8ee"/>
+
+  <!-- Красная шапка -->
+  <rect x="6" y="14" width="52" height="12" fill="url(#head)"/>
+
+  <!-- Надпись «ОКТЯБРЬ» (упрощённо, чтобы читалось в 16px) -->
+  <rect x="17" y="19" width="30" height="2.4" rx="1.2" fill="#ffffff" opacity="0.92"/>
+  <rect x="22" y="22.6" width="20" height="1.6" rx="0.8" fill="#ffffff" opacity="0.65"/>
+
+  <!-- Большое число -->
+  <text x="32" y="50"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="30"
+        font-weight="700"
+        fill="#1b1b1f">16</text>
+</svg>

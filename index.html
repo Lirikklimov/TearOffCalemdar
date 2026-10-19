@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отрывной календарь</title>
+<style>
+  *{ box-sizing:border-box; }
+
+  html,body{ height:100%; }
+
+  body{
+    /* ---------- ДЕНЬ (по умолчанию) ---------- */
+    --paper-top:#eceff2;
+    --paper-bottom:#dbe0e6;
+    --ink:#1b1b1f;
+    --muted:#6c737d;
+    --line:#c8cfd6;
+    --num-shadow:rgba(255,255,255,.5);
+    --weekday-color:#5a616b;
+    --foot-bg-1:rgba(255,255,255,.35);
+    --foot-bg-2:rgba(180,190,205,.35);
+    --sun-time-color:#2b2b31;
+
+    --week-bg:#d3e1f8;
+    --week-fg:#1a549c;
+    --week-num:#0f3d7d;
+    --week-shadow:rgba(20,66,143,.22);
+
+    --day-bg:#f7ddb4;
+    --day-fg:#8f4f08;
+    --day-num:#6f3c02;
+    --day-shadow:rgba(143,79,8,.25);
+
+    --sun-top:#ede7d8;
+    --sun-bottom:#e2d9c4;
+    --sun-line:#cfc3a6;
+    --sun-label:#8f7a4d;
+    --sun-rise:#c87910;
+    --sun-set:#b45718;
+    --sun-value:#5b4a25;
+
+    --red:#c93434;
+
+    --page-text:#2b3038;
+    --page-muted:#78808b;
+    --ui-border:rgba(20,30,50,.10);
+    --ui-bg:rgba(255,255,255,.72);
+    --ui-bg-hover:rgba(255,255,255,.95);
+
+    --page-bg-hi:#ffffff;
+    --page-bg-top:#f2f4f7;
+    --page-bg-bottom:#e4e7ec;
+
+    /* небо (градиент шапки) */
+    --sky-1:#7cc2e8;
+    --sky-2:#b8e0f4;
+    --sky-3:#98d0ec;
+    --sky-stars:0;
+    --orb-x:50%;
+
+    margin:0;
+    display:grid;
+    place-items:center;
+    padding:32px 20px 44px;
+    background:
+      radial-gradient(1100px 720px at 50% -10%,
+        var(--page-bg-hi) 0%,
+        var(--page-bg-top) 45%,
+        var(--page-bg-bottom) 100%);
+    transition: background 1.4s ease;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color:var(--page-text);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* ---------- РАССВЕТ (5–8) ---------- */
+  body[data-period="dawn"]{
+    --paper-top:#f8eee5;
+    --paper-bottom:#ecdcce;
+    --num-shadow:rgba(255,255,255,.6);
+    --weekday-color:#6a5a50;
+    --foot-bg-1:rgba(255,250,245,.5);
+    --foot-bg-2:rgba(200,175,155,.3);
+    --sun-top:#f7e4d1;
+    --sun-bottom:#ecd2b8;
+    --sun-line:#d8bfa2;
+    --sun-label:#9a7550;
+    --page-bg-hi:#fff8f0;
+    --page-bg-top:#faf0e6;
+    --page-bg-bottom:#ede0d2;
+    --sky-1:#f7c8a6;
+    --sky-2:#f5e0c2;
+    --sky-3:#ffd5a0;
+  }
+
+  /* ---------- ЗАКАТ (17–20) ---------- */
+  body[data-period="sunset"]{
+    --paper-top:#f7e9dd;
+    --paper-bottom:#e8d0bc;
+    --weekday-color:#6d5c4e;
+    --foot-bg-1:rgba(255,248,240,.5);
+    --foot-bg-2:rgba(200,175,155,.3);
+    --sun-top:#f5ddc6;
+    --sun-bottom:#e8c8ac;
+    --sun-line:#d4b898;
+    --sun-label:#9a7048;
+    --page-bg-hi:#fff5ec;
+    --page-bg-top:#f8ebe0;
+    --page-bg-bottom:#ebd8c8;
+    --sky-1:#ff9a6b;
+    --sky-2:#ffb894;
+    --sky-3:#ffd6b0;
+  }
+
+  /* ---------- СУМЕРКИ (20–22) ---------- */
+  body[data-period="dusk"]{
+    --paper-top:#3a3548;
+    --paper-bottom:#2c2839;
+    --ink:#e8e6ef;
+    --muted:#9a96aa;
+    --line:#4a4558;
+    --num-shadow:rgba(0,0,0,.4);
+    --weekday-color:#a098b0;
+    --foot-bg-1:rgba(60,55,75,.5);
+    --foot-bg-2:rgba(40,35,52,.6);
+    --sun-time-color:#e8e6ef;
+
+    --week-bg:#3a4468;
+    --week-fg:#b8c8ee;
+    --week-num:#d0dcf5;
+    --week-shadow:rgba(0,0,0,.5);
+
+    --day-bg:#4a3c28;
+    --day-fg:#e8c088;
+    --day-num:#f0c898;
+    --day-shadow:rgba(0,0,0,.4);
+
+    --sun-top:#353043;
+    --sun-bottom:#2a2538;
+    --sun-line:#4a4258;
+    --sun-label:#a89ab0;
+    --sun-value:#e0d8e8;
+
+    --page-text:#e8e6ef;
+    --page-muted:#9a96aa;
+    --ui-border:rgba(255,255,255,.12);
+    --ui-bg:rgba(255,255,255,.08);
+    --ui-bg-hover:rgba(255,255,255,.15);
+
+    --page-bg-hi:#2a2638;
+    --page-bg-top:#1f1c2a;
+    --page-bg-bottom:#15121e;
+
+    --sky-1:#6b5b8e;
+    --sky-2:#9a7aa8;
+    --sky-3:#c78f9e;
+  }
+
+  /* ---------- НОЧЬ (22–5) ---------- */
+  body[data-period="night"]{
+    --paper-top:#2a2f38;
+    --paper-bottom:#1e2229;
+    --ink:#e4e7ec;
+    --muted:#8b93a0;
+    --line:#3a4049;
+    --num-shadow:rgba(0,0,0,.5);
+    --weekday-color:#98a0aa;
+    --foot-bg-1:rgba(50,56,66,.5);
+    --foot-bg-2:rgba(30,35,42,.6);
+    --sun-time-color:#e4e7ec;
+
+    --week-bg:#2a3a55;
+    --week-fg:#8ab4e8;
+    --week-num:#a8c8f0;
+    --week-shadow:rgba(0,0,0,.5);
+
+    --day-bg:#3a2e20;
+    --day-fg:#d8a868;
+    --day-num:#e8b878;
+    --day-shadow:rgba(0,0,0,.4);
+
+    --sun-top:#262b33;
+    --sun-bottom:#1e2229;
+    --sun-line:#3a3d44;
+    --sun-label:#8a8a92;
+    --sun-value:#d0d4dc;
+
+    --page-text:#e4e7ec;
+    --page-muted:#8b93a0;
+    --ui-border:rgba(255,255,255,.12);
+    --ui-bg:rgba(255,255,255,.08);
+    --ui-bg-hover:rgba(255,255,255,.15);
+
+    --page-bg-hi:#1a1d24;
+    --page-bg-top:#14171d;
+    --page-bg-bottom:#0e1015;
+
+    --sky-1:#1a1f3a;
+    --sky-2:#2a3352;
+    --sky-3:#3a4370;
+    --sky-stars:1;
+  }
+
+  .app{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+
+  /* ================= Локация ================= */
+
+  .location{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:15px;
+    color:var(--page-muted);
+    transition:color 1s ease;
+  }
+
+  .location__dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:#3fae57;
+    box-shadow:0 0 0 4px rgba(63,174,87,.18);
+    flex:0 0 auto;
+  }
+
+  .location select{
+    font:inherit;
+    font-size:15px;
+    font-weight:600;
+    color:var(--page-text);
+    background:var(--ui-bg);
+    border:1px solid var(--ui-border);
+    border-radius:11px;
+    padding:9px 34px 9px 13px;
+    cursor:pointer;
+    max-width:260px;
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(150,160,180,.75) 50%),
+      linear-gradient(135deg, rgba(150,160,180,.75) 50%, transparent 50%);
+    background-position:
+      calc(100% - 17px) 50%,
+      calc(100% - 11px) 50%;
+    background-size:6px 6px, 6px 6px;
+    background-repeat:no-repeat;
+    box-shadow:0 1px 2px rgba(20,30,50,.06);
+    transition:background-color .18s, border-color .18s, color 1s ease;
+  }
+
+  .location select:hover{ background-color:var(--ui-bg-hover); border-color:rgba(150,160,180,.3); }
+  .location select option{ background:#ffffff; color:#2b3038; }
+
+  .location__coords{
+    font-variant-numeric:tabular-nums;
+    color:var(--page-muted);
+    font-size:13.5px;
+    transition:color 1s ease;
+  }
+
+  /* ================= Корпус ================= */
+
+  .calendar{
+    position:relative;
+    width:min(460px, 94vw);
+    filter: drop-shadow(0 30px 40px rgba(30,42,64,.24))
+            drop-shadow(0 4px 10px rgba(30,42,64,.13));
+  }
+
+  .binding{
+    position:relative;
+    z-index:8;
+    height:44px;
+    border-radius:22px 22px 0 0;
+    background:linear-gradient(180deg,#6b6f78 0%, #40444c 42%, #26292f 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.32),
+      inset 0 -2px 6px rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:30px;
+  }
+
+  .ring{
+    width:14px; height:14px;
+    border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #ffffff 0%, #c0c2ca 38%, #55575f 100%);
+    box-shadow:0 2px 4px rgba(0,0,0,.55), inset 0 -1px 1px rgba(0,0,0,.35);
+    transform:translateY(9px);
+  }
+
+  /* ================= Стопка ================= */
+
+  .stack{
+    position:relative;
+    height:720px;
+  }
+
+  .page{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    background:linear-gradient(180deg, var(--paper-top) 0%, var(--paper-bottom) 100%);
+    color:var(--ink);
+    border-radius:0 0 22px 22px;
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
+    cursor:grab;
+    box-shadow:
+      0 1px 0 rgba(30,42,64,.10),
+      0 14px 26px -10px rgba(30,42,64,.42);
+    transition:
+      transform .28s cubic-bezier(.2,.8,.3,1),
+      opacity .28s ease,
+      background 1.4s ease,
+      color 1.4s ease;
+    will-change:transform;
+  }
+
+  .page::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:3px;
+    background:repeating-linear-gradient(90deg,
+      rgba(30,42,64,.28) 0 6px, transparent 6px 14px);
+    z-index:2;
+    pointer-events:none;
+  }
+
+  .page--next{ z-index:1; }
+  .page--current{ z-index:3; }
+  .page--tearing{ z-index:4; }
+  .page.is-dragging{ cursor:grabbing; transition:none; }
+
+  /* ================= ШАПКА = НЕБО ================= */
+
+  .page__head{
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    min-height:96px;
+    padding:26px 22px 22px;
+    background:linear-gradient(180deg,
+      var(--sky-1) 0%,
+      var(--sky-2) 55%,
+      var(--sky-3) 100%);
+    color:#fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.28),
+      inset 0 -3px 10px rgba(0,0,0,.22);
+    transition:background 1.4s ease;
+  }
+
+  /* --- Звёзды --- */
+  .page__head::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      radial-gradient(1px 1px at 8% 42%, #ffffff, transparent),
+      radial-gradient(1px 1px at 19% 68%, #ffffff, transparent),
+      radial-gradient(1px 1px at 31% 28%, #ffffff, transparent),
+      radial-gradient(1px 1px at 44% 62%, #ffffff, transparent),
+      radial-gradient(1px 1px at 56% 34%, #ffffff, transparent),
+      radial-gradient(1px 1px at 68% 72%, #ffffff, transparent),
+      radial-gradient(1px 1px at 80% 30%, #ffffff, transparent),
+      radial-gradient(1px 1px at 92% 58%, #ffffff, transparent);
+    opacity:var(--sky-stars, 0);
+    transition:opacity 1.4s ease;
+    animation:twinkle 3.5s ease-in-out infinite alternate;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  @keyframes twinkle{
+    from { opacity: calc(var(--sky-stars, 0) * 0.55); }
+    to   { opacity: var(--sky-stars, 0); }
+  }
+
+  /* --- Солнце / Луна --- */
+  .page__orb{
+    position:absolute;
+    top:26%;
+    left:var(--orb-x, 50%);
+    transform:translate(-50%, -50%);
+    font-size:24px;
+    line-height:1;
+    color:#fff2c8;
+    filter:drop-shadow(0 0 6px rgba(255,240,180,.9));
+    transition:
+      left .9s cubic-bezier(.3,.7,.4,1),
+      color .6s ease,
+      filter .6s ease;
+    pointer-events:none;
+    user-select:none;
+    z-index:1;
+  }
+
+  body[data-period="dusk"] .page__orb,
+  body[data-period="night"] .page__orb{
+    color:#e8ecff;
+    filter:drop-shadow(0 0 6px rgba(200,220,255,.9));
+  }
+
+  /* --- Облака --- */
+  .page__clouds{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:2;
+    opacity:1;
+    transition:opacity 1.4s ease, filter 1.4s ease;
+  }
+
+  body[data-period="dusk"] .page__clouds{
+    opacity:0.4;
+    filter:brightness(0.5);
+  }
+  body[data-period="night"] .page__clouds{
+    opacity:0.12;
+    filter:brightness(0.3);
+  }
+
+  .cloud{
+    position:absolute;
+    left:-120px;
+    background:#fff;
+    border-radius:999px;
+    filter:blur(5px);
+    opacity:0.65;
+    will-change:left;
+    transition:background 1.4s ease;
+  }
+
+  body[data-period="dawn"] .cloud{ background:#ffe4d6; }
+  body[data-period="sunset"] .cloud{ background:#ffd0b8; }
+
+  .cloud::before,
+  .cloud::after{
+    content:"";
+    position:absolute;
+    background:inherit;
+    border-radius:50%;
+  }
+
+  .cloud--1{
+    width:70px; height:22px;
+    top:22%;
+    animation:drift 60s linear infinite;
+    animation-delay:-10s;
+  }
+  .cloud--1::before{
+    width:26px; height:26px;
+    top:-13px; left:12px;
+  }
+  .cloud--1::after{
+    width:34px; height:34px;
+    top:-18px; left:36px;
+  }
+
+  .cloud--2{
+    width:52px; height:16px;
+    top:48%;
+    opacity:0.5;
+    animation:drift 45s linear infinite;
+    animation-delay:-28s;
+  }
+  .cloud--2::before{
+    width:20px; height:20px;
+    top:-10px; left:8px;
+  }
+  .cloud--2::after{
+    width:26px; height:26px;
+    top:-14px; left:26px;
+  }
+
+  .cloud--3{
+    width:90px; height:26px;
+    top:32%;
+    opacity:0.55;
+    animation:drift 80s linear infinite;
+    animation-delay:-45s;
+  }
+  .cloud--3::before{
+    width:32px; height:32px;
+    top:-16px; left:15px;
+  }
+  .cloud--3::after{
+    width:42px; height:42px;
+    top:-22px; left:45px;
+  }
+
+  @keyframes drift{
+    from { left: -120px; }
+    to   { left: calc(100% + 20px); }
+  }
+
+  /* --- Текст шапки --- */
+  .page__month{
+    position:relative;
+    z-index:3;
+    font-size:25px;
+    font-weight:800;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    text-shadow:
+      0 2px 4px rgba(0,0,0,.35),
+      0 1px 1px rgba(0,0,0,.22);
+  }
+
+  .page__year{
+    position:relative;
+    z-index:3;
+    font-size:18px;
+    font-weight:600;
+    letter-spacing:.09em;
+    opacity:.92;
+    text-shadow:
+      0 2px 4px rgba(0,0,0,.35),
+      0 1px 1px rgba(0,0,0,.22);
+  }
+
+  /* ================= Центр ================= */
+
+  .page__main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    min-height:0;
+    padding:6px 0 4px;
+  }
+
+  .page__num{
+    font-family: Georgia, "Times New Roman", serif;
+    font-size:172px;
+    line-height:.86;
+    font-weight:700;
+    letter-spacing:-.05em;
+    color:var(--ink);
+    font-variant-numeric:lining-nums;
+    text-shadow:0 2px 0 var(--num-shadow);
+    transition:color 1.4s ease, text-shadow 1.4s ease;
+  }
+
+  .page__num.is-weekend{ color:var(--red); }
+
+  .page__weekday{
+    margin-top:6px;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--weekday-color);
+    transition:color 1.4s ease;
+  }
+
+  .page__tags{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:7px;
+    margin-top:15px;
+    padding:0 14px;
+  }
+
+  .page__tags:empty{ display:none; }
+
+  .page__holiday{
+    padding:8px 19px;
+    border-radius:999px;
+    background:linear-gradient(180deg,#ffdede,#ffc2c2);
+    color:#a41f28;
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    box-shadow:
+      0 3px 8px -3px rgba(164,31,40,.42),
+      inset 0 -1px 0 rgba(0,0,0,.05);
+    animation:pop .45s cubic-bezier(.2,1.4,.4,1) both;
+    white-space:nowrap;
+  }
+
+  .page__conference{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 18px;
+    border-radius:999px;
+    background:linear-gradient(180deg,#e4e8f6,#c7cee9);
+    color:#2c3a78;
+    font-size:12.5px;
+    font-weight:800;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    box-shadow:
+      0 3px 8px -3px rgba(44,58,120,.42),
+      inset 0 -1px 0 rgba(0,0,0,.05);
+    animation:pop .45s cubic-bezier(.2,1.4,.4,1) both;
+    white-space:nowrap;
+  }
+
+  .page__conference::before{
+    content:"✦";
+    font-size:12px;
+    line-height:1;
+    color:#5a6cb8;
+    transform:translateY(-1px);
+  }
+
+  @keyframes pop{
+    from{ transform:scale(.7); opacity:0; }
+    to  { transform:scale(1);  opacity:1; }
+  }
+
+  /* ================= Солнце ================= */
+
+  .page__sun{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    background:linear-gradient(180deg, var(--sun-top) 0%, var(--sun-bottom) 100%);
+    border-top:1px solid var(--sun-line);
+    padding:13px 13px 14px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+    transition:background 1.4s ease, border-color 1.4s ease;
+  }
+
+  .sun-row{
+    display:grid;
+    grid-template-columns:1fr 1px 1fr;
+    align-items:center;
+  }
+
+  .sun{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:11px;
+    padding:3px 6px;
+  }
+
+  .sun__icon{
+    width:36px; height:36px;
+    flex:0 0 auto;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    font-size:18px;
+    font-weight:800;
+    line-height:1;
+    color:#fff;
+    box-shadow:0 3px 7px -3px rgba(0,0,0,.35);
+  }
+
+  .sun--rise .sun__icon{ background:linear-gradient(160deg,#ffb642,#d97f10); }
+  .sun--set  .sun__icon{ background:linear-gradient(160deg,#ef8f45,#c05a1c); }
+  .sun--polar .sun__icon{ background:linear-gradient(160deg,#8bb1dd,#4f7fb6); }
+
+  .sun__info{
+    display:flex;
+    flex-direction:column;
+    line-height:1.05;
+    min-width:0;
+  }
+
+  .sun__label{
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--sun-label);
+    transition:color 1.4s ease;
+  }
+
+  .sun__time{
+    margin-top:3px;
+    font-size:23px;
+    font-weight:800;
+    letter-spacing:-.01em;
+    font-variant-numeric:tabular-nums;
+    color:var(--sun-time-color);
+    transition:color 1.4s ease;
+  }
+
+  .sun--rise .sun__time{ color:var(--sun-rise); }
+  .sun--set  .sun__time{ color:var(--sun-set); }
+
+  .sun__time.is-na{
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--sun-label);
+  }
+
+  .sun-divider{
+    width:1px;
+    height:46px;
+    background:var(--sun-line);
+    transition:background 1.4s ease;
+  }
+
+  .sun-daylight{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    padding-top:10px;
+    border-top:1px dashed var(--sun-line);
+    transition:border-color 1.4s ease;
+  }
+
+  .sun-daylight__row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    padding:0 8px;
+  }
+
+  .sun-daylight__label{
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--sun-label);
+    transition:color 1.4s ease;
+  }
+
+  .sun-daylight__value{
+    font-size:18px;
+    font-weight:800;
+    letter-spacing:-.01em;
+    color:var(--sun-value);
+    font-variant-numeric:tabular-nums;
+    transition:color 1.4s ease;
+  }
+
+  .sun-daylight__bar{
+    position:relative;
+    height:5px;
+    margin:0 8px;
+    border-radius:999px;
+    background:rgba(120,100,60,.18);
+    overflow:hidden;
+    box-shadow:inset 0 1px 1px rgba(0,0,0,.06);
+  }
+
+  .sun-daylight__fill{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#ffc94a 0%, #d97f10 100%);
+    box-shadow:0 0 7px rgba(217,127,16,.5);
+    transition:width .5s cubic-bezier(.2,.8,.3,1);
+  }
+
+  /* ================= Подвал ================= */
+
+  .page__foot{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:14px 16px 16px;
+    border-top:1px solid var(--line);
+    background:linear-gradient(180deg, var(--foot-bg-1) 0%, var(--foot-bg-2) 100%);
+    transition:background 1.4s ease, border-color 1.4s ease;
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:baseline;
+    gap:4px;
+    padding:7px 15px 8px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.03em;
+    white-space:nowrap;
+    box-shadow:inset 0 -1px 0 rgba(0,0,0,.06);
+    transition:background 1.4s ease, color 1.4s ease;
+  }
+
+  .badge__num{
+    font-size:24px;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:-.01em;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .badge--week{
+    background:var(--week-bg);
+    color:var(--week-fg);
+    box-shadow:
+      0 3px 8px -3px var(--week-shadow),
+      inset 0 -1px 0 rgba(0,0,0,.05);
+  }
+  .badge--week .badge__num{ color:var(--week-num); }
+
+  .badge--day{
+    background:var(--day-bg);
+    color:var(--day-fg);
+    box-shadow:
+      0 3px 8px -3px var(--day-shadow),
+      inset 0 -1px 0 rgba(0,0,0,.05);
+  }
+  .badge--day .badge__num{ color:var(--day-num); }
+
+  /* ================= Кнопки ================= */
+
+  .controls{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .btn{
+    font:inherit;
+    font-size:15.5px;
+    font-weight:600;
+    padding:14px 22px;
+    border-radius:13px;
+    border:1px solid var(--ui-border);
+    background:var(--ui-bg);
+    color:var(--page-text);
+    cursor:pointer;
+    box-shadow:0 1px 2px rgba(20,30,50,.06);
+    transition:
+      background .18s,
+      border-color .18s,
+      transform .1s,
+      opacity .18s,
+      box-shadow .18s,
+      color 1s ease;
+  }
+
+  .btn:hover:not(:disabled){
+    background:var(--ui-bg-hover);
+    border-color:rgba(150,160,180,.3);
+    box-shadow:0 4px 10px rgba(20,30,50,.10);
+  }
+  .btn:active:not(:disabled){ transform:translateY(1px); box-shadow:0 1px 2px rgba(20,30,50,.08); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .btn--primary{
+    background:linear-gradient(180deg,#dc4b4b,#bd2f2f);
+    border-color:rgba(0,0,0,.15);
+    color:#fff;
+    box-shadow:0 8px 18px -5px rgba(189,47,47,.55);
+  }
+  .btn--primary:hover:not(:disabled){
+    background:linear-gradient(180deg,#e35656,#c93434);
+    box-shadow:0 10px 22px -5px rgba(189,47,47,.65);
+  }
+
+  .btn--sound.is-off{
+    opacity:.55;
+    color:var(--page-muted);
+  }
+
+  .hint{
+    margin:0;
+    font-size:14px;
+    color:var(--page-muted);
+    text-align:center;
+    max-width:400px;
+    line-height:1.55;
+    transition:color 1s ease;
+  }
+
+  /* ================= Адаптив ================= */
+
+  @media (max-width:520px){
+    .calendar{ width:min(400px, 94vw); }
+    .stack{ height:650px; }
+    .page__num{ font-size:152px; }
+    .page__head{ min-height:88px; padding:24px 20px 20px; }
+    .page__orb{ font-size:22px; }
+  }
+
+  @media (max-width:420px){
+    .calendar{ width:94vw; }
+    .stack{ height:570px; }
+    .page__num{ font-size:120px; }
+    .page__month{ font-size:20px; }
+    .page__year{ font-size:15px; }
+    .page__weekday{ font-size:14px; }
+    .page__head{ min-height:80px; padding:22px 18px 18px; }
+    .page__orb{ font-size:19px; top:24%; }
+    .sun__time{ font-size:19px; }
+    .sun__icon{ width:30px; height:30px; font-size:15px; }
+    .sun-daylight__value{ font-size:15.5px; }
+    .badge{ padding:6px 11px 7px; font-size:11.5px; }
+    .badge__num{ font-size:20px; }
+    .binding{ height:38px; }
+    .ring{ width:12px; height:12px; }
+    .page__holiday{ font-size:12px; padding:6px 14px; }
+    .page__conference{ font-size:10.5px; padding:6px 12px; letter-spacing:.05em; }
+    .page__conference::before{ font-size:10px; }
+    .btn{ font-size:13.5px; padding:11px 15px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .page{ transition:none; }
+    .page__holiday,
+    .page__conference{ animation:none; }
+    .sun-daylight__fill{ transition:none; }
+    .page__head::after{ animation:none; }
+    .page__orb{ transition:none; }
+    .cloud{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="location">
+    <span class="location__dot" id="locDot" title="Активное местоположение"></span>
+    <select id="citySelect" aria-label="Местоположение для расчёта восхода и заката"></select>
+    <span class="location__coords" id="locCoords"></span>
+  </div>
+
+  <div class="calendar" role="group" aria-label="Отрывной календарь">
+    <div class="binding">
+      <span class="ring"></span>
+      <span class="ring"></span>
+      <span class="ring"></span>
+      <span class="ring"></span>
+      <span class="ring"></span>
+    </div>
+    <div class="stack" id="stack" aria-live="polite"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btnUndo" title="Вернуть листок (←)">← Вернуть</button>
+    <button class="btn btn--primary" id="btnTear" title="Оторвать листок (→)">Оторвать ↓</button>
+    <button class="btn" id="btnToday" title="Сегодня (T)">Сегодня</button>
+    <button class="btn btn--sound" id="btnSound" title="Включить/выключить звук (S)">🔊 Звук</button>
+  </div>
+
+  <p class="hint">Потяните листок вниз — или нажмите «Оторвать».<br>
+    Горячие клавиши: → оторвать, ← вернуть, T — сегодня, S — звук.</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     ЖИВОЕ НЕБО И АВТО-ТЕМА
+     ============================================================ */
+
+  function getPeriod(hour) {
+    if (hour >= 5  && hour < 8)  return 'dawn';
+    if (hour >= 8  && hour < 17) return 'day';
+    if (hour >= 17 && hour < 20) return 'sunset';
+    if (hour >= 20 && hour < 22) return 'dusk';
+    return 'night';
+  }
+
+  // Флаг: отключали ли мы уже звук сегодня вечером
+  let autoMutedToday = null;
+
+  function updateSky() {
+    const now  = new Date();
+    const hour = now.getHours() + now.getMinutes() / 60;
+    const period = getPeriod(now.getHours());
+
+    document.body.dataset.period = period;
+
+    // Положение солнца/луны
+    const x = 5 + (hour / 24) * 90;
+    document.documentElement.style.setProperty('--orb-x', x.toFixed(2) + '%');
+
+    // Иконка орба
+    const isMoon = (period === 'dusk' || period === 'night');
+    const orbs = document.querySelectorAll('.page__orb');
+    for (let i = 0; i < orbs.length; i++) {
+      orbs[i].textContent = isMoon ? '☾' : '☀';
+    }
+
+    // Автовыключение звука после 21:00
+    if (now.getHours() >= 21) {
+      const todayStr = now.toDateString();
+      if (autoMutedToday !== todayStr) {
+        if (SoundEngine.isEnabled()) {
+          SoundEngine.disable();
+          updateSoundButton();
+        }
+        autoMutedToday = todayStr;
+      }
+    } else {
+      autoMutedToday = null;
+    }
+  }
+
+  /* ============================================================
+     ЗВУК ОТРЫВА — Web Audio API
+     ============================================================ */
+
+  const SoundEngine = (function () {
+    let ctx = null;
+    let enabled = true;
+
+    function getCtx() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try { ctx = new AC(); } catch (e) { return null; }
+      }
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(function(){});
+      }
+      return ctx;
+    }
+
+    function play() {
+      if (!enabled) return;
+      const ac = getCtx();
+      if (!ac) return;
+
+      if (ac.state === 'suspended') {
+        ac.resume().then(function () { actualPlay(ac); }).catch(function(){});
+      } else {
+        actualPlay(ac);
+      }
+    }
+
+    function actualPlay(ac) {
+      const now = ac.currentTime;
+      const dur = 0.30 + Math.random() * 0.18;
+      const sr  = ac.sampleRate;
+
+      const n   = Math.floor(sr * dur);
+      const buf = ac.createBuffer(1, n, sr);
+      const ch  = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) ch[i] = Math.random() * 2 - 1;
+
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+
+      const hp = ac.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 750;
+
+      const bp = ac.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 2100 + Math.random() * 900;
+      bp.Q.value = 1.05;
+
+      const mainGain = ac.createGain();
+      mainGain.gain.setValueAtTime(0.0001, now);
+      mainGain.gain.exponentialRampToValueAtTime(0.19, now + 0.012);
+      mainGain.gain.exponentialRampToValueAtTime(0.13, now + dur * 0.45);
+      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      src.connect(hp);
+      hp.connect(bp);
+      bp.connect(mainGain);
+      mainGain.connect(ac.destination);
+
+      src.start(now);
+      src.stop(now + dur);
+
+      const cracks = 22 + Math.floor(Math.random() * 14);
+      for (let i = 0; i < cracks; i++) {
+        const t = now + (i / cracks) * dur * (0.85 + Math.random() * 0.35);
+        if (t >= now + dur) break;
+
+        const cl = Math.max(8, Math.floor(sr * 0.006));
+        const cb = ac.createBuffer(1, cl, sr);
+        const cd = cb.getChannelData(0);
+        for (let j = 0; j < cl; j++) {
+          cd[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / cl, 2.2);
+        }
+
+        const cs = ac.createBufferSource();
+        cs.buffer = cb;
+
+        const cf = ac.createBiquadFilter();
+        cf.type = 'bandpass';
+        cf.frequency.value = 2700 + Math.random() * 3200;
+        cf.Q.value = 4;
+
+        const cg = ac.createGain();
+        cg.gain.value = 0.035 + Math.random() * 0.095;
+
+        cs.connect(cf);
+        cf.connect(cg);
+        cg.connect(ac.destination);
+
+        cs.start(t);
+        cs.stop(t + 0.012);
+      }
+    }
+
+    function toggle() {
+      enabled = !enabled;
+      if (enabled) getCtx();
+      return enabled;
+    }
+
+    function disable() {
+      enabled = false;
+      return enabled;
+    }
+
+    return { play: play, toggle: toggle, disable: disable, isEnabled: function () { return enabled; } };
+  })();
+
+  /* ============================================================
+     ДАННЫЕ
+     ============================================================ */
+
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                  'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+  const WEEKDAYS = ['воскресенье','понедельник','вторник','среда',
+                    'четверг','пятница','суббота'];
+
+  const HOLIDAYS = {
+    '1-1':   'Новый год',
+    '1-7':   'Рождество Христово',
+    '2-23':  'День защитника Отечества',
+    '3-8':   'Международный женский день',
+    '5-1':   'Праздник Весны и Труда',
+    '5-9':   'День Победы',
+    '6-12':  'День России',
+    '11-4':  'День народного единства',
+    '12-24': 'Сочельник',
+    '12-25': 'Рождество'
+  };
+
+  const CITIES = [
+    { id:'moscow',   name:'Москва',            lat:55.7558, lon:37.6173 },
+    { id:'spb',      name:'Санкт-Петербург',   lat:59.9343, lon:30.3351 },
+    { id:'novosib',  name:'Новосибирск',       lat:55.0084, lon:82.9357 },
+    { id:'ekat',     name:'Екатеринбург',      lat:56.8389, lon:60.6057 },
+    { id:'kazan',    name:'Казань',            lat:55.8304, lon:49.0661 },
+    { id:'sochi',    name:'Сочи',              lat:43.6028, lon:39.7342 },
+    { id:'vlad',     name:'Владивосток',       lat:43.1332, lon:131.9113 },
+    { id:'murmansk', name:'Мурманск',          lat:68.9585, lon:33.0827 },
+    { id:'kalining', name:'Калининград',       lat:54.7104, lon:20.4522 },
+    { id:'yakutsk',  name:'Якутск',            lat:62.0355, lon:129.6755 }
+  ];
+
+  const LS_KEY = 'tearoff-calendar.location';
+
+  /* ============================================================
+     УТИЛИТЫ ДАТ
+     ============================================================ */
+
+  const DAY_MS = 86400000;
+
+  function startOfDay(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }
+
+  function addDays(d, n) {
+    const x = new Date(d);
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+
+  function sameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth() === b.getMonth() &&
+           a.getDate() === b.getDate();
+  }
+
+  function dayOfYear(d) {
+    const start = Date.UTC(d.getFullYear(), 0, 1);
+    const cur   = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.round((cur - start) / DAY_MS) + 1;
+  }
+
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - yearStart) / DAY_MS + 1) / 7);
+  }
+
+  /* ============================================================
+     ГЕНЕРАТОР РВАНОГО КРАЯ
+     ============================================================ */
+
+  const RIP_MIN_DEPTH = 0.5;
+  const RIP_MAX_DEPTH = 4.6;
+
+  function generateTornPolygon() {
+    const segments = 26 + Math.floor(Math.random() * 19);
+    const pts = [];
+
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * 100;
+      const y = RIP_MIN_DEPTH + Math.random() * (RIP_MAX_DEPTH - RIP_MIN_DEPTH);
+      pts.push(x.toFixed(2) + '% ' + y.toFixed(2) + '%');
+    }
+
+    const r = 2.2;
+    const steps = 4;
+
+    for (let i = 1; i <= steps; i++) {
+      const a = (i / steps) * (Math.PI / 2);
+      const x = 100 - r + Math.cos(a) * r;
+      const y = 100 - r + Math.sin(a) * r;
+      pts.push(x.toFixed(2) + '% ' + y.toFixed(2) + '%');
+    }
+
+    pts.push(r.toFixed(2) + '% 100%');
+
+    for (let i = 1; i <= steps; i++) {
+      const a = (i / steps) * (Math.PI / 2);
+      const x = r - Math.sin(a) * r;
+      const y = 100 - r + Math.cos(a) * r;
+      pts.push(x.toFixed(2) + '% ' + y.toFixed(2) + '%');
+    }
+
+    pts.push('0% ' + RIP_MIN_DEPTH.toFixed(2) + '%');
+
+    return 'polygon(' + pts.join(', ') + ')';
+  }
+
+  function applyTornClip(el) {
+    const poly = generateTornPolygon();
+    el.style.clipPath = poly;
+    el.style.webkitClipPath = poly;
+  }
+
+  function clearTornClip(el) {
+    el.style.clipPath = '';
+    el.style.webkitClipPath = '';
+  }
+
+  /* ============================================================
+     ФОРМАТИРОВАНИЕ ДЛИТЕЛЬНОСТИ
+     ============================================================ */
+
+  function formatDuration(ms) {
+    if (!ms || ms < 0) ms = 0;
+
+    const totalMin = Math.round(ms / 60000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+
+    if (h === 0) return m + ' мин';
+    if (m === 0) return h + ' ч';
+    return h + ' ч ' + m + ' мин';
+  }
+
+  /* ============================================================
+     АЛГОРИТМ ВОСХОДА / ЗАКАТА
+     ============================================================ */
+
+  const SUN = (function () {
+    const rad = Math.PI / 180;
+    const dayMs = 86400000;
+    const J1970 = 2440588;
+    const J2000 = 2451545;
+    const e = rad * 23.4397;
+    const J0 = 0.0009;
+
+    const toJulian   = d => d.valueOf() / dayMs - 0.5 + J1970;
+    const fromJulian = j => new Date((j + 0.5 - J1970) * dayMs);
+    const toDays     = d => toJulian(d) - J2000;
+
+    const solarMeanAnomaly = d => rad * (357.5291 + 0.98560028 * d);
+
+    function eclipticLongitude(M) {
+      const C = rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
+      const P = rad * 102.9372;
+      return M + C + P + Math.PI;
+    }
+
+    const declination = (l, b) =>
+      Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+
+    const julianCycle   = (d, lw) => Math.round(d - J0 - lw / (2 * Math.PI));
+    const approxTransit = (Ht, lw, n) => J0 + (Ht + lw) / (2 * Math.PI) + n;
+    const solarTransitJ = (ds, M, L) =>
+      J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+
+    function hourAngle(h, phi, d) {
+      const x = (Math.sin(h) - Math.sin(phi) * Math.sin(d)) /
+                (Math.cos(phi) * Math.cos(d));
+      if (x < -1 || x > 1) return NaN;
+      return Math.acos(x);
+    }
+
+    function getSetJ(h, lw, phi, dec, n, M, L) {
+      const w = hourAngle(h, phi, dec);
+      if (isNaN(w)) return NaN;
+      const a = approxTransit(w, lw, n);
+      return solarTransitJ(a, M, L);
+    }
+
+    function getTimes(date, lat, lon) {
+      const lw  = rad * -lon;
+      const phi = rad * lat;
+
+      const noon = new Date(date);
+      noon.setHours(12, 0, 0, 0);
+
+      const d  = toDays(noon);
+      const n  = julianCycle(d, lw);
+      const ds = approxTransit(0, lw, n);
+      const M  = solarMeanAnomaly(ds);
+      const L  = eclipticLongitude(M);
+      const dec = declination(L, 0);
+      const Jnoon = solarTransitJ(ds, M, L);
+
+      const h0   = -0.833 * rad;
+      const Jset = getSetJ(h0, lw, phi, dec, n, M, L);
+
+      if (isNaN(Jset)) {
+        const sinAlt = Math.sin(phi) * Math.sin(dec) +
+                       Math.cos(phi) * Math.cos(dec);
+        return {
+          sunrise: null,
+          sunset: null,
+          polar: sinAlt > 0 ? 'day' : 'night'
+        };
+      }
+
+      const Jrise = Jnoon - (Jset - Jnoon);
+      return {
+        sunrise: fromJulian(Jrise),
+        sunset:  fromJulian(Jset),
+        polar: null
+      };
+    }
+
+    return { getTimes };
+  })();
+
+  function fmtTime(date) {
+    if (!date || isNaN(date)) return null;
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  }
+
+  const weekSuffix = () => '-я';
+  const daySuffix  = () => '-й';
+
+  /* ============================================================
+     СПЕЦИАЛЬНЫЕ ДАТЫ
+     ============================================================ */
+
+  const CONFERENCE_LABEL = 'Генеральная конференция';
+
+  function firstWeekdayOfMonth(year, month, weekday) {
+    const d = new Date(year, month, 1);
+    const diff = (weekday - d.getDay() + 7) % 7;
+    d.setDate(1 + diff);
+    return d;
+  }
+
+  const _specialCache = { year: null, map: null };
+
+  function getSpecialMap(year) {
+    if (_specialCache.year === year) return _specialCache.map;
+
+    const map = {};
+
+    const aprSat = firstWeekdayOfMonth(year, 3, 6);
+    const aprSun = firstWeekdayOfMonth(year, 3, 0);
+    map['4-' + aprSat.getDate()] = CONFERENCE_LABEL;
+    map['4-' + aprSun.getDate()] = CONFERENCE_LABEL;
+
+    const octSat = firstWeekdayOfMonth(year, 9, 6);
+    const octSun = firstWeekdayOfMonth(year, 9, 0);
+    map['10-' + octSat.getDate()] = CONFERENCE_LABEL;
+    map['10-' + octSun.getDate()] = CONFERENCE_LABEL;
+
+    _specialCache.year = year;
+    _specialCache.map  = map;
+    return map;
+  }
+
+  function getSpecialLabel(date) {
+    const key = (date.getMonth() + 1) + '-' + date.getDate();
+    return getSpecialMap(date.getFullYear())[key] || null;
+  }
+
+  /* ============================================================
+     СОСТОЯНИЕ
+     ============================================================ */
+
+  const stackEl  = document.getElementById('stack');
+  const btnTear  = document.getElementById('btnTear');
+  const btnUndo  = document.getElementById('btnUndo');
+  const btnToday = document.getElementById('btnToday');
+  const btnSound = document.getElementById('btnSound');
+  const selEl    = document.getElementById('citySelect');
+  const coordsEl = document.getElementById('locCoords');
+
+  const TODAY = startOfDay(new Date());
+  let current = startOfDay(new Date());
+  let locked  = false;
+
+  let location_ = (function loadLocation() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (typeof obj.lat === 'number' && typeof obj.lon === 'number') {
+          return { id: obj.id || 'custom', name: obj.name || 'Моё место',
+                   lat: obj.lat, lon: obj.lon };
+        }
+      }
+    } catch (e) {}
+    return { id:'moscow', name:'Москва', lat:55.7558, lon:37.6173 };
+  })();
+
+  function saveLocation() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        id: location_.id, name: location_.name,
+        lat: location_.lat, lon: location_.lon
+      }));
+    } catch (e) {}
+  }
+
+  function lock(ms) {
+    locked = true;
+    setTimeout(() => { locked = false; }, ms);
+  }
+
+  /* ============================================================
+     КНОПКА ЗВУКА
+     ============================================================ */
+
+  function updateSoundButton() {
+    const on = SoundEngine.isEnabled();
+    btnSound.textContent = on ? '🔊 Звук' : '🔇 Звук';
+    btnSound.classList.toggle('is-off', !on);
+    btnSound.setAttribute('aria-pressed', String(on));
+  }
+
+  btnSound.addEventListener('click', function () {
+    SoundEngine.toggle();
+    updateSoundButton();
+  });
+
+  /* ============================================================
+     СПИСОК ГОРОДОВ
+     ============================================================ */
+
+  function renderCitySelect() {
+    selEl.innerHTML = '';
+
+    CITIES.forEach(function (c) {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      selEl.appendChild(opt);
+    });
+
+    const sep = document.createElement('option');
+    sep.disabled = true;
+    sep.textContent = '──────────';
+    selEl.appendChild(sep);
+
+    const geo = document.createElement('option');
+    geo.value = '__geo';
+    geo.textContent = '📍 Моё местоположение';
+    selEl.appendChild(geo);
+
+    if (location_.id === 'geo' || location_.id === 'custom') {
+      const custom = document.createElement('option');
+      custom.value = location_.id;
+      custom.textContent = location_.name;
+      selEl.insertBefore(custom, sep);
+      selEl.value = location_.id;
+    } else {
+      selEl.value = location_.id;
+    }
+
+    updateCoordsLabel();
+  }
+
+  function updateCoordsLabel() {
+    coordsEl.textContent =
+      location_.lat.toFixed(2) + '°, ' + location_.lon.toFixed(2) + '°';
+  }
+
+  selEl.addEventListener('change', function () {
+    const v = selEl.value;
+
+    if (v === '__geo') { requestGeolocation(); return; }
+
+    const city = CITIES.find(c => c.id === v);
+    if (city) {
+      location_ = { id: city.id, name: city.name, lat: city.lat, lon: city.lon };
+      saveLocation();
+      updateCoordsLabel();
+      rebuild();
+    }
+  });
+
+  function requestGeolocation() {
+    if (!navigator.geolocation) {
+      alert('Геолокация не поддерживается браузером.');
+      selEl.value = location_.id;
+      return;
+    }
+
+    const dot = document.getElementById('locDot');
+    dot.style.background = '#e0a020';
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        location_ = {
+          id: 'geo',
+          name: 'Моё местоположение',
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude
+        };
+        saveLocation();
+        renderCitySelect();
+        dot.style.background = '#3fae57';
+        rebuild();
+      },
+      function (err) {
+        alert('Не удалось определить местоположение: ' + err.message);
+        selEl.value = location_.id;
+        dot.style.background = '#3fae57';
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+    );
+  }
+
+  /* ============================================================
+     БЛОК «СОЛНЦЕ»
+     ============================================================ */
+
+  function buildSunBlock(date) {
+    const sun = SUN.getTimes(date, location_.lat, location_.lon);
+
+    if (sun.polar === 'day') {
+      return {
+        html:
+          '<div class="page__sun">' +
+            '<div class="sun-row" style="grid-template-columns:1fr">' +
+              '<div class="sun sun--polar" style="justify-content:center">' +
+                '<div class="sun__icon">☀</div>' +
+                '<div class="sun__info">' +
+                  '<span class="sun__label">Полярный день</span>' +
+                  '<span class="sun__time is-na">Солнце не заходит</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sun-daylight">' +
+              '<div class="sun-daylight__row">' +
+                '<span class="sun-daylight__label">Световой день</span>' +
+                '<span class="sun-daylight__value">24 ч</span>' +
+              '</div>' +
+              '<div class="sun-daylight__bar" title="Длительность светового дня">' +
+                '<div class="sun-daylight__fill" style="width:100%"></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>',
+        aria: ', полярный день, световой день 24 часа'
+      };
+    }
+
+    if (sun.polar === 'night') {
+      return {
+        html:
+          '<div class="page__sun">' +
+            '<div class="sun-row" style="grid-template-columns:1fr">' +
+              '<div class="sun sun--polar" style="justify-content:center">' +
+                '<div class="sun__icon">☾</div>' +
+                '<div class="sun__info">' +
+                  '<span class="sun__label">Полярная ночь</span>' +
+                  '<span class="sun__time is-na">Солнце не восходит</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sun-daylight">' +
+              '<div class="sun-daylight__row">' +
+                '<span class="sun-daylight__label">Световой день</span>' +
+                '<span class="sun-daylight__value">0 мин</span>' +
+              '</div>' +
+              '<div class="sun-daylight__bar" title="Длительность светового дня">' +
+                '<div class="sun-daylight__fill" style="width:0%"></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>',
+        aria: ', полярная ночь, световой день отсутствует'
+      };
+    }
+
+    const sunriseStr = fmtTime(sun.sunrise) || '—:—';
+    const sunsetStr  = fmtTime(sun.sunset)  || '—:—';
+
+    const durMs  = Math.max(0, sun.sunset - sun.sunrise);
+    const durStr = formatDuration(durMs);
+    const dayPct = Math.max(0, Math.min(100, (durMs / DAY_MS) * 100));
+
+    return {
+      html:
+        '<div class="page__sun">' +
+          '<div class="sun-row">' +
+            '<div class="sun sun--rise">' +
+              '<div class="sun__icon">↑</div>' +
+              '<div class="sun__info">' +
+                '<span class="sun__label">Восход</span>' +
+                '<span class="sun__time">' + sunriseStr + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sun-divider"></div>' +
+            '<div class="sun sun--set">' +
+              '<div class="sun__icon">↓</div>' +
+              '<div class="sun__info">' +
+                '<span class="sun__label">Закат</span>' +
+                '<span class="sun__time">' + sunsetStr + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="sun-daylight">' +
+            '<div class="sun-daylight__row">' +
+              '<span class="sun-daylight__label">Световой день</span>' +
+              '<span class="sun-daylight__value">' + durStr + '</span>' +
+            '</div>' +
+            '<div class="sun-daylight__bar" ' +
+                 'title="Световой день: ' + durStr + ' (' + dayPct.toFixed(0) + '% суток)">' +
+              '<div class="sun-daylight__fill" style="width:' + dayPct.toFixed(2) + '%"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>',
+      aria: ', восход ' + sunriseStr + ', закат ' + sunsetStr +
+            ', световой день ' + durStr
+    };
+  }
+
+  /* ============================================================
+     СОЗДАНИЕ ЛИСТКА
+     ============================================================ */
+
+  function currentOrbChar() {
+    const p = document.body.dataset.period;
+    return (p === 'dusk' || p === 'night') ? '☾' : '☀';
+  }
+
+  function createPage(date) {
+    const el = document.createElement('div');
+    el.className = 'page';
+
+    const day   = date.getDate();
+    const month = date.getMonth();
+    const year  = date.getFullYear();
+    const wd    = date.getDay();
+    const weekend = (wd === 0 || wd === 6);
+    const holiday = HOLIDAYS[(month + 1) + '-' + day];
+    const conference = getSpecialLabel(date);
+
+    const weekNum = isoWeek(date);
+    const doy     = dayOfYear(date);
+
+    const sunData = buildSunBlock(date);
+
+    const badges =
+      '<span class="badge badge--week" title="Номер недели по ISO">' +
+        '<span class="badge__num">' + weekNum + '</span>' +
+        '<span>' + weekSuffix(weekNum) + ' неделя</span>' +
+      '</span>' +
+      '<span class="badge badge--day" title="Порядковый номер дня в году">' +
+        '<span class="badge__num">' + doy + '</span>' +
+        '<span>' + daySuffix(doy) + ' день года</span>' +
+      '</span>';
+
+    let tagsHtml = '';
+    if (holiday)    tagsHtml += '<div class="page__holiday">' + holiday + '</div>';
+    if (conference) tagsHtml += '<div class="page__conference">' + conference + '</div>';
+    const tagsBlock = tagsHtml ? '<div class="page__tags">' + tagsHtml + '</div>' : '';
+
+    el.innerHTML =
+      '<div class="page__head">' +
+        '<div class="page__clouds" aria-hidden="true">' +
+          '<span class="cloud cloud--1"></span>' +
+          '<span class="cloud cloud--2"></span>' +
+          '<span class="cloud cloud--3"></span>' +
+        '</div>' +
+        '<span class="page__orb">' + currentOrbChar() + '</span>' +
+        '<span class="page__month">' + MONTHS[month] + '</span>' +
+        '<span class="page__year">' + year + '</span>' +
+      '</div>' +
+      '<div class="page__main">' +
+        '<div class="page__num' + (weekend ? ' is-weekend' : '') + '">' + day + '</div>' +
+        '<div class="page__weekday">' + WEEKDAYS[wd] + '</div>' +
+        tagsBlock +
+      '</div>' +
+      sunData.html +
+      '<div class="page__foot">' + badges + '</div>';
+
+    let aria = day + ' ' + MONTHS[month].toLowerCase() + ' ' + year + ', ' + WEEKDAYS[wd] +
+               ', ' + weekNum + '-я неделя, ' + doy + '-й день года' +
+               sunData.aria;
+    if (holiday)    aria += ', ' + holiday;
+    if (conference) aria += ', ' + conference;
+    el.setAttribute('aria-label', aria);
+
+    el._dx = 0; el._dy = 0; el._rot = 0;
+    el._ripping = false;
+
+    attachDrag(el);
+    return el;
+  }
+
+  /* ============================================================
+     ПЕРЕТАСКИВАНИЕ
+     ============================================================ */
+
+  const RIP_THRESHOLD = 10;
+
+  function attachDrag(el) {
+    let active = false;
+    let sx = 0, sy = 0, pid = null;
+
+    el.addEventListener('pointerdown', function (e) {
+      if (!el.classList.contains('page--current')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+      active = true;
+      pid = e.pointerId;
+      sx = e.clientX;
+      sy = e.clientY;
+      el._dx = el._dy = el._rot = 0;
+
+      try { el.setPointerCapture(pid); } catch (err) {}
+      el.classList.add('is-dragging');
+      el.style.transition = 'none';
+    });
+
+    el.addEventListener('pointermove', function (e) {
+      if (!active || e.pointerId !== pid) return;
+
+      let dx = e.clientX - sx;
+      let dy = e.clientY - sy;
+
+      if (dy < 0) dy *= 0.35;
+      if (dx < 0) dx *= 0.75;
+
+      const rot = dx * 0.05 + dy * 0.05;
+
+      el._dx = dx; el._dy = dy; el._rot = rot;
+
+      if (dy > RIP_THRESHOLD && !el._ripping) {
+        applyTornClip(el);
+        el.classList.add('is-ripping');
+        el._ripping = true;
+      }
+
+      el.style.transform = 'translate(' + (dx * 0.7) + 'px,' + dy + 'px) rotate(' + rot + 'deg)';
+      el.style.opacity = Math.max(0.3, 1 - Math.max(0, dy) / 900).toFixed(3);
+    });
+
+    function finish(e) {
+      if (!active || (e && e.pointerId !== pid)) return;
+      active = false;
+      el.classList.remove('is-dragging');
+
+      const dx = el._dx, dy = el._dy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dy > 110 || dist > 180) {
+        tearOff();
+      } else {
+        el.style.transition = 'transform .38s cubic-bezier(.2,.9,.3,1), opacity .3s ease';
+        el.style.transform = '';
+        el.style.opacity = '';
+        el._dx = el._dy = el._rot = 0;
+
+        setTimeout(function () {
+          el.classList.remove('is-ripping');
+          el._ripping = false;
+          clearTornClip(el);
+          el.style.transition = '';
+        }, 380);
+      }
+    }
+
+    el.addEventListener('pointerup', finish);
+    el.addEventListener('pointercancel', finish);
+  }
+
+  /* ============================================================
+     СТОПКА
+     ============================================================ */
+
+  function buildStack(animateIn) {
+    stackEl.innerHTML = '';
+
+    const nextEl = createPage(addDays(current, 1));
+    nextEl.classList.add('page--next');
+    stackEl.appendChild(nextEl);
+
+    const curEl = createPage(current);
+    curEl.classList.add('page--current');
+
+    if (animateIn) {
+      curEl.style.opacity = '0';
+      curEl.style.transform = 'translateY(-30px) rotate(-3.5deg)';
+    }
+
+    stackEl.appendChild(curEl);
+
+    if (animateIn) {
+      void curEl.offsetWidth;
+      curEl.style.opacity = '';
+      curEl.style.transform = '';
+    }
+
+    updateButtons();
+  }
+
+  function rebuild() {
+    const curEl  = stackEl.querySelector('.page--current');
+    const nextEl = stackEl.querySelector('.page--next');
+
+    if (!curEl || !nextEl) { buildStack(false); return; }
+
+    const newCur  = createPage(current);
+    newCur.classList.add('page--current');
+    const newNext = createPage(addDays(current, 1));
+    newNext.classList.add('page--next');
+
+    stackEl.replaceChild(newNext, nextEl);
+    stackEl.replaceChild(newCur, curEl);
+  }
+
+  /* ============================================================
+     ОТОРВАТЬ
+     ============================================================ */
+
+  function tearOff() {
+    if (locked) return;
+
+    const curEl  = stackEl.querySelector('.page--current');
+    const nextEl = stackEl.querySelector('.page--next');
+    if (!curEl || !nextEl) return;
+
+    lock(170);
+
+    SoundEngine.play();
+
+    if (!curEl._ripping) {
+      applyTornClip(curEl);
+      curEl.classList.add('is-ripping');
+      curEl._ripping = true;
+    }
+
+    nextEl.classList.remove('page--next');
+    nextEl.classList.add('page--current');
+    nextEl.style.transform = '';
+    nextEl.style.opacity = '';
+
+    const newNext = createPage(addDays(current, 2));
+    newNext.classList.add('page--next');
+    stackEl.insertBefore(newNext, nextEl);
+
+    current = addDays(current, 1);
+    updateButtons();
+
+    const dx  = curEl._dx  || 0;
+    const dy  = curEl._dy  || 0;
+    const rot = curEl._rot || 0;
+    const ox  = dx * 0.7;
+
+    const from = 'translate(' + ox + 'px,' + dy + 'px) rotate(' + rot + 'deg)';
+    const mid  = 'translate(' + (ox + 10) + 'px,' + (dy + 44) + 'px) rotate(' + (rot + 5) + 'deg)';
+    const to   = 'translate(' + (ox + 90) + 'px,' + (dy + 720) + 'px) rotate(' + (rot + 27) + 'deg)';
+
+    curEl.classList.remove('page--current');
+    curEl.classList.add('page--tearing');
+    curEl.style.transition = 'none';
+
+    const anim = curEl.animate(
+      [
+        { transform: from, opacity: 1, offset: 0 },
+        { transform: mid,  opacity: 1, offset: 0.18 },
+        { transform: to,   opacity: 0, offset: 1 }
+      ],
+      { duration: 720, easing: 'cubic-bezier(.45,.05,.75,.9)', fill: 'forwards' }
+    );
+
+    anim.onfinish = () => curEl.remove();
+    setTimeout(() => curEl.remove(), 1200);
+  }
+
+  /* ============================================================
+     ВЕРНУТЬ
+     ============================================================ */
+
+  function undo() {
+    if (locked) return;
+
+    const curEl  = stackEl.querySelector('.page--current');
+    const nextEl = stackEl.querySelector('.page--next');
+    if (!curEl) return;
+
+    lock(170);
+
+    if (nextEl) nextEl.remove();
+
+    curEl.classList.remove('page--current');
+    curEl.classList.add('page--next');
+    curEl.style.transform = '';
+    curEl.style.opacity = '';
+    curEl._dx = curEl._dy = curEl._rot = 0;
+    clearTornClip(curEl);
+    curEl.classList.remove('is-ripping');
+    curEl._ripping = false;
+
+    const prevDate = addDays(current, -1);
+    const prevEl = createPage(prevDate);
+    prevEl.classList.add('page--current');
+    prevEl.style.opacity = '0';
+    prevEl.style.transform = 'translateY(-56px) rotate(-7deg)';
+
+    stackEl.appendChild(prevEl);
+
+    current = prevDate;
+    updateButtons();
+
+    void prevEl.offsetWidth;
+    prevEl.style.opacity = '';
+    prevEl.style.transform = '';
+  }
+
+  /* ============================================================
+     СЕГОДНЯ
+     ============================================================ */
+
+  function goToday() {
+    if (locked) return;
+    if (sameDay(current, TODAY)) return;
+
+    lock(250);
+    current = startOfDay(new Date());
+    buildStack(true);
+  }
+
+  /* ============================================================
+     КНОПКИ / КЛАВИАТУРА
+     ============================================================ */
+
+  function updateButtons() {
+    btnToday.disabled = sameDay(current, TODAY);
+  }
+
+  btnTear.addEventListener('click', tearOff);
+  btnUndo.addEventListener('click', undo);
+  btnToday.addEventListener('click', goToday);
+
+  document.addEventListener('keydown', function (e) {
+    const t = e.target;
+    if (t && t.closest && t.closest('button')) return;
+    if (t && t.tagName === 'SELECT') return;
+
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      tearOff();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      undo();
+    } else if (e.code === 'KeyT') {
+      e.preventDefault();
+      goToday();
+    } else if (e.code === 'KeyS') {
+      e.preventDefault();
+      SoundEngine.toggle();
+      updateSoundButton();
+    }
+  });
+
+  /* ============================================================
+     СТАРТ
+     ============================================================ */
+
+  try {
+    renderCitySelect();
+    buildStack(false);
+    updateSoundButton();
+    updateSky();
+    setInterval(updateSky, 60000);
+  } catch (err) {
+    console.error('Календарь не запустился:', err);
+  }
+
+})();
+</script>
+</body>
+</html>
